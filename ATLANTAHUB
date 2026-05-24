@@ -1,12 +1,12 @@
--- ATLANTAHUB V1.1 Intro + GUI Script
--- Place in StarterPlayerScripts as a LocalScript
+-- ATLANTAHUB V1.1 | Vertical GUI + Minimize Toggle
+-- Paste into Roblox Studio LocalScript or executor
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+local playerGui = player.PlayerGui
 
 -- =====================
 --   INTRO SCREEN
@@ -19,7 +19,6 @@ introGui.IgnoreGuiInset = true
 introGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 introGui.Parent = playerGui
 
--- Dark overlay
 local overlay = Instance.new("Frame")
 overlay.Size = UDim2.new(1, 0, 1, 0)
 overlay.Position = UDim2.new(0, 0, 0, 0)
@@ -29,10 +28,9 @@ overlay.BorderSizePixel = 0
 overlay.ZIndex = 10
 overlay.Parent = introGui
 
--- Title label
 local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(0.8, 0, 0.2, 0)
-titleLabel.Position = UDim2.new(0.1, 0, 0.4, 0)
+titleLabel.Size = UDim2.new(0.8, 0, 0.15, 0)
+titleLabel.Position = UDim2.new(0.1, 0, 0.425, 0)
 titleLabel.BackgroundTransparency = 1
 titleLabel.Text = "ATLANTAHUB V1.1"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -42,37 +40,27 @@ titleLabel.TextTransparency = 1
 titleLabel.ZIndex = 11
 titleLabel.Parent = introGui
 
--- Bubble / rounded text effect
-local uiCorner = Instance.new("UICorner")
-uiCorner.CornerRadius = UDim.new(0.3, 0)
-uiCorner.Parent = titleLabel
-
 local uiStroke = Instance.new("UIStroke")
 uiStroke.Color = Color3.fromRGB(255, 255, 255)
 uiStroke.Thickness = 2.5
 uiStroke.Transparency = 1
 uiStroke.Parent = titleLabel
 
--- Tween info
 local fadeIn  = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local fadeOut = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+local quickFade = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
--- Fade in overlay
 TweenService:Create(overlay, fadeIn, {BackgroundTransparency = 0}):Play()
 task.wait(0.8)
 
--- Fade in text + stroke
 TweenService:Create(titleLabel, fadeIn, {TextTransparency = 0}):Play()
 TweenService:Create(uiStroke, fadeIn, {Transparency = 0}):Play()
+task.wait(4)
 
-task.wait(4) -- Hold for 4 seconds
-
--- Fade out text
 TweenService:Create(titleLabel, fadeOut, {TextTransparency = 1}):Play()
 TweenService:Create(uiStroke, fadeOut, {Transparency = 1}):Play()
 task.wait(0.8)
 
--- Fade out overlay
 TweenService:Create(overlay, fadeOut, {BackgroundTransparency = 1}):Play()
 task.wait(1)
 
@@ -89,18 +77,18 @@ hubGui.IgnoreGuiInset = true
 hubGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 hubGui.Parent = playerGui
 
--- Main frame (horizontal pill shape)
+-- Main vertical frame
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 420, 0, 240)
-mainFrame.Position = UDim2.new(0.5, -210, 0.5, -120)
+mainFrame.Size = UDim2.new(0, 220, 0, 320)
+mainFrame.Position = UDim2.new(0.5, -110, 0.5, -160)
 mainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
 mainFrame.BorderSizePixel = 0
 mainFrame.ClipsDescendants = true
 mainFrame.Parent = hubGui
 
 local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 28)
+mainCorner.CornerRadius = UDim.new(0, 22)
 mainCorner.Parent = mainFrame
 
 local mainStroke = Instance.new("UIStroke")
@@ -108,38 +96,37 @@ mainStroke.Color = Color3.fromRGB(80, 120, 255)
 mainStroke.Thickness = 2
 mainStroke.Parent = mainFrame
 
--- Top header bar
+-- Header bar
 local headerBar = Instance.new("Frame")
 headerBar.Name = "Header"
-headerBar.Size = UDim2.new(1, 0, 0, 44)
+headerBar.Size = UDim2.new(1, 0, 0, 42)
 headerBar.Position = UDim2.new(0, 0, 0, 0)
 headerBar.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
 headerBar.BorderSizePixel = 0
 headerBar.Parent = mainFrame
 
 local headerCorner = Instance.new("UICorner")
-headerCorner.CornerRadius = UDim.new(0, 28)
+headerCorner.CornerRadius = UDim.new(0, 22)
 headerCorner.Parent = headerBar
 
--- Square off bottom corners of header
-local headerSquare = Instance.new("Frame")
-headerSquare.Size = UDim2.new(1, 0, 0.5, 0)
-headerSquare.Position = UDim2.new(0, 0, 0.5, 0)
-headerSquare.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
-headerSquare.BorderSizePixel = 0
-headerSquare.Parent = headerBar
+local headerSquareFix = Instance.new("Frame")
+headerSquareFix.Size = UDim2.new(1, 0, 0.5, 0)
+headerSquareFix.Position = UDim2.new(0, 0, 0.5, 0)
+headerSquareFix.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+headerSquareFix.BorderSizePixel = 0
+headerSquareFix.Parent = headerBar
 
 -- Divider line
 local divider = Instance.new("Frame")
-divider.Size = UDim2.new(0.92, 0, 0, 2)
-divider.Position = UDim2.new(0.04, 0, 0, 44)
+divider.Size = UDim2.new(0.88, 0, 0, 2)
+divider.Position = UDim2.new(0.06, 0, 0, 42)
 divider.BackgroundColor3 = Color3.fromRGB(80, 120, 255)
 divider.BorderSizePixel = 0
 divider.Parent = mainFrame
 
--- Title text
+-- Title
 local hubTitle = Instance.new("TextLabel")
-hubTitle.Size = UDim2.new(1, -20, 1, 0)
+hubTitle.Size = UDim2.new(1, -40, 1, 0)
 hubTitle.Position = UDim2.new(0, 10, 0, 0)
 hubTitle.BackgroundTransparency = 1
 hubTitle.Text = "ATLANTADUELS"
@@ -151,8 +138,8 @@ hubTitle.Parent = headerBar
 
 -- Close button
 local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 30, 0, 30)
-closeBtn.Position = UDim2.new(1, -38, 0.5, -15)
+closeBtn.Size = UDim2.new(0, 26, 0, 26)
+closeBtn.Position = UDim2.new(1, -32, 0.5, -13)
 closeBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
 closeBtn.Text = "✕"
 closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -166,58 +153,150 @@ local closeBtnCorner = Instance.new("UICorner")
 closeBtnCorner.CornerRadius = UDim.new(1, 0)
 closeBtnCorner.Parent = closeBtn
 
-closeBtn.MouseButton1Click:Connect(function()
-    hubGui:Destroy()
-end)
-
--- Content area placeholder label
+-- Content placeholder
 local contentLabel = Instance.new("TextLabel")
 contentLabel.Size = UDim2.new(1, 0, 1, -52)
 contentLabel.Position = UDim2.new(0, 0, 0, 52)
 contentLabel.BackgroundTransparency = 1
-contentLabel.Text = "Welcome to AtlantaDuels"
+contentLabel.Text = "Welcome to\nAtlantaDuels"
 contentLabel.TextColor3 = Color3.fromRGB(160, 160, 200)
 contentLabel.TextScaled = true
 contentLabel.Font = Enum.Font.Gotham
 contentLabel.Parent = mainFrame
 
 -- =====================
---   DRAGGING LOGIC
+--   MINIMIZE BUTTON
+-- =====================
+
+local miniBtn = Instance.new("TextButton")
+miniBtn.Name = "MiniBtn"
+miniBtn.Size = UDim2.new(0, 110, 0, 26)
+miniBtn.Position = UDim2.new(0.5, -55, 1, -50)
+miniBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+miniBtn.Text = "ATLANTADUELS"
+miniBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+miniBtn.TextScaled = true
+miniBtn.Font = Enum.Font.GothamBold
+miniBtn.BorderSizePixel = 0
+miniBtn.Visible = false
+miniBtn.ZIndex = 20
+miniBtn.Parent = hubGui
+
+local miniBtnCorner = Instance.new("UICorner")
+miniBtnCorner.CornerRadius = UDim.new(1, 0)
+miniBtnCorner.Parent = miniBtn
+
+local miniBtnStroke = Instance.new("UIStroke")
+miniBtnStroke.Color = Color3.fromRGB(80, 120, 255)
+miniBtnStroke.Thickness = 1.5
+miniBtnStroke.Parent = miniBtn
+
+-- =====================
+--   DRAGGING (main)
 -- =====================
 
 local dragging = false
 local dragStart = nil
 local startPos = nil
 
-local function onInputBegan(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = mainFrame.Position
-    end
+headerBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = mainFrame.Position
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch) then
+		local delta = input.Position - dragStart
+		mainFrame.Position = UDim2.new(
+			startPos.X.Scale, startPos.X.Offset + delta.X,
+			startPos.Y.Scale, startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = false
+	end
+end)
+
+-- =====================
+--   DRAGGING (mini btn)
+-- =====================
+
+local miniDragging = false
+local miniDragStart = nil
+local miniStartPos = nil
+
+miniBtn.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+		miniDragging = true
+		miniDragStart = input.Position
+		miniStartPos = miniBtn.Position
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if miniDragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch) then
+		local delta = input.Position - miniDragStart
+		miniBtn.Position = UDim2.new(
+			miniStartPos.X.Scale, miniStartPos.X.Offset + delta.X,
+			miniStartPos.Y.Scale, miniStartPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+		miniDragging = false
+	end
+end)
+
+-- =====================
+--   CLOSE → MINI TOGGLE
+-- =====================
+
+local guiVisible = true
+
+local function fadeMainOut()
+	local t = TweenService:Create(mainFrame, quickFade, {Size = UDim2.new(0, 0, 0, 0)})
+	TweenService:Create(mainFrame, quickFade, {BackgroundTransparency = 1}):Play()
+	t:Play()
+	t.Completed:Wait()
+	mainFrame.Visible = false
+	mainFrame.Size = UDim2.new(0, 220, 0, 320)
+	mainFrame.BackgroundTransparency = 0
+	miniBtn.Visible = true
+	guiVisible = false
 end
 
-local function onInputChanged(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
-        or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        mainFrame.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
-    end
+local function fadeMainIn()
+	miniBtn.Visible = false
+	mainFrame.Visible = true
+	mainFrame.Size = UDim2.new(0, 0, 0, 0)
+	mainFrame.BackgroundTransparency = 0
+	local t = TweenService:Create(mainFrame, quickFade, {Size = UDim2.new(0, 220, 0, 320)})
+	t:Play()
+	guiVisible = true
 end
 
-local function onInputEnded(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-    end
-end
+closeBtn.MouseButton1Click:Connect(function()
+	if not miniDragging then
+		fadeMainOut()
+	end
+end)
 
-headerBar.InputBegan:Connect(onInputBegan)
-UserInputService.InputChanged:Connect(onInputChanged)
-UserInputService.InputEnded:Connect(onInputEnded)
+miniBtn.MouseButton1Click:Connect(function()
+	if not miniDragging then
+		fadeMainIn()
+	end
+end)
