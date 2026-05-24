@@ -1,0 +1,223 @@
+-- ATLANTAHUB V1.1 Intro + GUI Script
+-- Place in StarterPlayerScripts as a LocalScript
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- =====================
+--   INTRO SCREEN
+-- =====================
+
+local introGui = Instance.new("ScreenGui")
+introGui.Name = "AtlantaIntro"
+introGui.ResetOnSpawn = false
+introGui.IgnoreGuiInset = true
+introGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+introGui.Parent = playerGui
+
+-- Dark overlay
+local overlay = Instance.new("Frame")
+overlay.Size = UDim2.new(1, 0, 1, 0)
+overlay.Position = UDim2.new(0, 0, 0, 0)
+overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+overlay.BackgroundTransparency = 1
+overlay.BorderSizePixel = 0
+overlay.ZIndex = 10
+overlay.Parent = introGui
+
+-- Title label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(0.8, 0, 0.2, 0)
+titleLabel.Position = UDim2.new(0.1, 0, 0.4, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "ATLANTAHUB V1.1"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextScaled = true
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextTransparency = 1
+titleLabel.ZIndex = 11
+titleLabel.Parent = introGui
+
+-- Bubble / rounded text effect
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0.3, 0)
+uiCorner.Parent = titleLabel
+
+local uiStroke = Instance.new("UIStroke")
+uiStroke.Color = Color3.fromRGB(255, 255, 255)
+uiStroke.Thickness = 2.5
+uiStroke.Transparency = 1
+uiStroke.Parent = titleLabel
+
+-- Tween info
+local fadeIn  = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local fadeOut = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+
+-- Fade in overlay
+TweenService:Create(overlay, fadeIn, {BackgroundTransparency = 0}):Play()
+task.wait(0.8)
+
+-- Fade in text + stroke
+TweenService:Create(titleLabel, fadeIn, {TextTransparency = 0}):Play()
+TweenService:Create(uiStroke, fadeIn, {Transparency = 0}):Play()
+
+task.wait(4) -- Hold for 4 seconds
+
+-- Fade out text
+TweenService:Create(titleLabel, fadeOut, {TextTransparency = 1}):Play()
+TweenService:Create(uiStroke, fadeOut, {Transparency = 1}):Play()
+task.wait(0.8)
+
+-- Fade out overlay
+TweenService:Create(overlay, fadeOut, {BackgroundTransparency = 1}):Play()
+task.wait(1)
+
+introGui:Destroy()
+
+-- =====================
+--   MAIN HUB GUI
+-- =====================
+
+local hubGui = Instance.new("ScreenGui")
+hubGui.Name = "AtlantaDuelsHub"
+hubGui.ResetOnSpawn = false
+hubGui.IgnoreGuiInset = true
+hubGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+hubGui.Parent = playerGui
+
+-- Main frame (horizontal pill shape)
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 420, 0, 240)
+mainFrame.Position = UDim2.new(0.5, -210, 0.5, -120)
+mainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
+mainFrame.BorderSizePixel = 0
+mainFrame.ClipsDescendants = true
+mainFrame.Parent = hubGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 28)
+mainCorner.Parent = mainFrame
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(80, 120, 255)
+mainStroke.Thickness = 2
+mainStroke.Parent = mainFrame
+
+-- Top header bar
+local headerBar = Instance.new("Frame")
+headerBar.Name = "Header"
+headerBar.Size = UDim2.new(1, 0, 0, 44)
+headerBar.Position = UDim2.new(0, 0, 0, 0)
+headerBar.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+headerBar.BorderSizePixel = 0
+headerBar.Parent = mainFrame
+
+local headerCorner = Instance.new("UICorner")
+headerCorner.CornerRadius = UDim.new(0, 28)
+headerCorner.Parent = headerBar
+
+-- Square off bottom corners of header
+local headerSquare = Instance.new("Frame")
+headerSquare.Size = UDim2.new(1, 0, 0.5, 0)
+headerSquare.Position = UDim2.new(0, 0, 0.5, 0)
+headerSquare.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+headerSquare.BorderSizePixel = 0
+headerSquare.Parent = headerBar
+
+-- Divider line
+local divider = Instance.new("Frame")
+divider.Size = UDim2.new(0.92, 0, 0, 2)
+divider.Position = UDim2.new(0.04, 0, 0, 44)
+divider.BackgroundColor3 = Color3.fromRGB(80, 120, 255)
+divider.BorderSizePixel = 0
+divider.Parent = mainFrame
+
+-- Title text
+local hubTitle = Instance.new("TextLabel")
+hubTitle.Size = UDim2.new(1, -20, 1, 0)
+hubTitle.Position = UDim2.new(0, 10, 0, 0)
+hubTitle.BackgroundTransparency = 1
+hubTitle.Text = "ATLANTADUELS"
+hubTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+hubTitle.TextScaled = true
+hubTitle.Font = Enum.Font.GothamBold
+hubTitle.TextXAlignment = Enum.TextXAlignment.Center
+hubTitle.Parent = headerBar
+
+-- Close button
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -38, 0.5, -15)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeBtn.TextScaled = true
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.BorderSizePixel = 0
+closeBtn.ZIndex = 5
+closeBtn.Parent = headerBar
+
+local closeBtnCorner = Instance.new("UICorner")
+closeBtnCorner.CornerRadius = UDim.new(1, 0)
+closeBtnCorner.Parent = closeBtn
+
+closeBtn.MouseButton1Click:Connect(function()
+    hubGui:Destroy()
+end)
+
+-- Content area placeholder label
+local contentLabel = Instance.new("TextLabel")
+contentLabel.Size = UDim2.new(1, 0, 1, -52)
+contentLabel.Position = UDim2.new(0, 0, 0, 52)
+contentLabel.BackgroundTransparency = 1
+contentLabel.Text = "Welcome to AtlantaDuels"
+contentLabel.TextColor3 = Color3.fromRGB(160, 160, 200)
+contentLabel.TextScaled = true
+contentLabel.Font = Enum.Font.Gotham
+contentLabel.Parent = mainFrame
+
+-- =====================
+--   DRAGGING LOGIC
+-- =====================
+
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+local function onInputBegan(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+    end
+end
+
+local function onInputChanged(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end
+
+local function onInputEnded(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end
+
+headerBar.InputBegan:Connect(onInputBegan)
+UserInputService.InputChanged:Connect(onInputChanged)
+UserInputService.InputEnded:Connect(onInputEnded)
