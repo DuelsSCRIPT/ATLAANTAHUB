@@ -1,10 +1,32 @@
--- ATLANTAHUB V1.1 | Fixed Minimize Toggle
+-- ATLANTAHUB V1.1 | Pretend Hacker Simulator Tools
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local playerGui = player.PlayerGui
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+player.CharacterAdded:Connect(function(c)
+	character = c
+	humanoid = c:WaitForChild("Humanoid")
+	rootPart = c:WaitForChild("HumanoidRootPart")
+end)
+
+-- =====================
+--   SETTINGS
+-- =====================
+
+local DEFAULT_SPEED = 16
+local CUSTOM_SPEED = 50
+local AUTO_GRAB_RANGE = 10
+local timerESP = false
+local infJump = false
+local speedEnabled = false
+local autoGrab = false
 
 -- =====================
 --   INTRO SCREEN
@@ -68,11 +90,10 @@ hubGui.ResetOnSpawn = false
 hubGui.IgnoreGuiInset = true
 hubGui.Parent = playerGui
 
--- Main frame
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 220, 0, 320)
-mainFrame.Position = UDim2.new(0.5, -110, 0.5, -160)
+mainFrame.Size = UDim2.new(0, 230, 0, 480)
+mainFrame.Position = UDim2.new(0.5, -115, 0.5, -240)
 mainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
 mainFrame.BorderSizePixel = 0
 mainFrame.ClipsDescendants = true
@@ -140,15 +161,257 @@ local closeBtnCorner = Instance.new("UICorner")
 closeBtnCorner.CornerRadius = UDim.new(1, 0)
 closeBtnCorner.Parent = closeBtn
 
-local contentLabel = Instance.new("TextLabel")
-contentLabel.Size = UDim2.new(1, 0, 1, -52)
-contentLabel.Position = UDim2.new(0, 0, 0, 52)
-contentLabel.BackgroundTransparency = 1
-contentLabel.Text = "Welcome to\nAtlantaDuels"
-contentLabel.TextColor3 = Color3.fromRGB(160, 160, 200)
-contentLabel.TextScaled = true
-contentLabel.Font = Enum.Font.Gotham
-contentLabel.Parent = mainFrame
+-- =====================
+--   SCROLL CONTENT AREA
+-- =====================
+
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, 0, 1, -52)
+scrollFrame.Position = UDim2.new(0, 0, 0, 52)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.BorderSizePixel = 0
+scrollFrame.ScrollBarThickness = 3
+scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(80, 120, 255)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scrollFrame.Parent = mainFrame
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Padding = UDim.new(0, 8)
+listLayout.Parent = scrollFrame
+
+local listPadding = Instance.new("UIPadding")
+listPadding.PaddingTop = UDim.new(0, 10)
+listPadding.PaddingLeft = UDim.new(0, 12)
+listPadding.PaddingRight = UDim.new(0, 12)
+listPadding.PaddingBottom = UDim.new(0, 10)
+listPadding.Parent = scrollFrame
+
+-- =====================
+--   HELPER: SECTION LABEL
+-- =====================
+
+local function makeSection(labelText)
+	local lbl = Instance.new("TextLabel")
+	lbl.Size = UDim2.new(1, 0, 0, 20)
+	lbl.BackgroundTransparency = 1
+	lbl.Text = labelText
+	lbl.TextColor3 = Color3.fromRGB(80, 120, 255)
+	lbl.TextScaled = true
+	lbl.Font = Enum.Font.GothamBold
+	lbl.TextXAlignment = Enum.TextXAlignment.Left
+	lbl.Parent = scrollFrame
+	return lbl
+end
+
+-- =====================
+--   HELPER: TOGGLE ROW
+-- =====================
+
+local function makeToggle(labelText, layoutOrder, callback)
+	local row = Instance.new("Frame")
+	row.Size = UDim2.new(1, 0, 0, 38)
+	row.BackgroundColor3 = Color3.fromRGB(26, 26, 40)
+	row.BorderSizePixel = 0
+	row.LayoutOrder = layoutOrder
+	row.Parent = scrollFrame
+
+	local rowCorner = Instance.new("UICorner")
+	rowCorner.CornerRadius = UDim.new(0, 10)
+	rowCorner.Parent = row
+
+	local lbl = Instance.new("TextLabel")
+	lbl.Size = UDim2.new(1, -60, 1, 0)
+	lbl.Position = UDim2.new(0, 10, 0, 0)
+	lbl.BackgroundTransparency = 1
+	lbl.Text = labelText
+	lbl.TextColor3 = Color3.fromRGB(220, 220, 255)
+	lbl.TextScaled = true
+	lbl.Font = Enum.Font.Gotham
+	lbl.TextXAlignment = Enum.TextXAlignment.Left
+	lbl.Parent = row
+
+	-- Toggle pill
+	local toggleBg = Instance.new("Frame")
+	toggleBg.Size = UDim2.new(0, 40, 0, 22)
+	toggleBg.Position = UDim2.new(1, -50, 0.5, -11)
+	toggleBg.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+	toggleBg.BorderSizePixel = 0
+	toggleBg.Parent = row
+
+	local toggleBgCorner = Instance.new("UICorner")
+	toggleBgCorner.CornerRadius = UDim.new(1, 0)
+	toggleBgCorner.Parent = toggleBg
+
+	local toggleCircle = Instance.new("Frame")
+	toggleCircle.Size = UDim2.new(0, 16, 0, 16)
+	toggleCircle.Position = UDim2.new(0, 3, 0.5, -8)
+	toggleCircle.BackgroundColor3 = Color3.fromRGB(150, 150, 180)
+	toggleCircle.BorderSizePixel = 0
+	toggleCircle.Parent = toggleBg
+
+	local circleCorner = Instance.new("UICorner")
+	circleCorner.CornerRadius = UDim.new(1, 0)
+	circleCorner.Parent = toggleCircle
+
+	local enabled = false
+
+	local toggleBtn = Instance.new("TextButton")
+	toggleBtn.Size = UDim2.new(1, 0, 1, 0)
+	toggleBtn.BackgroundTransparency = 1
+	toggleBtn.Text = ""
+	toggleBtn.Parent = toggleBg
+
+	toggleBtn.MouseButton1Click:Connect(function()
+		enabled = not enabled
+		if enabled then
+			TweenService:Create(toggleBg, quickFade, {BackgroundColor3 = Color3.fromRGB(80, 120, 255)}):Play()
+			TweenService:Create(toggleCircle, quickFade, {Position = UDim2.new(0, 21, 0.5, -8), BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+		else
+			TweenService:Create(toggleBg, quickFade, {BackgroundColor3 = Color3.fromRGB(50, 50, 70)}):Play()
+			TweenService:Create(toggleCircle, quickFade, {Position = UDim2.new(0, 3, 0.5, -8), BackgroundColor3 = Color3.fromRGB(150, 150, 180)}):Play()
+		end
+		if callback then callback(enabled) end
+	end)
+
+	return row
+end
+
+-- =====================
+--   HELPER: VALUE ROW
+-- =====================
+
+local function makeValueRow(labelText, defaultVal, layoutOrder, callback)
+	local row = Instance.new("Frame")
+	row.Size = UDim2.new(1, 0, 0, 38)
+	row.BackgroundColor3 = Color3.fromRGB(26, 26, 40)
+	row.BorderSizePixel = 0
+	row.LayoutOrder = layoutOrder
+	row.Parent = scrollFrame
+
+	local rowCorner = Instance.new("UICorner")
+	rowCorner.CornerRadius = UDim.new(0, 10)
+	rowCorner.Parent = row
+
+	local lbl = Instance.new("TextLabel")
+	lbl.Size = UDim2.new(0.5, 0, 1, 0)
+	lbl.Position = UDim2.new(0, 10, 0, 0)
+	lbl.BackgroundTransparency = 1
+	lbl.Text = labelText
+	lbl.TextColor3 = Color3.fromRGB(220, 220, 255)
+	lbl.TextScaled = true
+	lbl.Font = Enum.Font.Gotham
+	lbl.TextXAlignment = Enum.TextXAlignment.Left
+	lbl.Parent = row
+
+	local box = Instance.new("TextBox")
+	box.Size = UDim2.new(0, 60, 0, 26)
+	box.Position = UDim2.new(1, -70, 0.5, -13)
+	box.BackgroundColor3 = Color3.fromRGB(36, 36, 56)
+	box.BorderSizePixel = 0
+	box.Text = tostring(defaultVal)
+	box.TextColor3 = Color3.fromRGB(255, 255, 255)
+	box.TextScaled = true
+	box.Font = Enum.Font.GothamBold
+	box.ClearTextOnFocus = false
+	box.Parent = row
+
+	local boxCorner = Instance.new("UICorner")
+	boxCorner.CornerRadius = UDim.new(0, 8)
+	boxCorner.Parent = box
+
+	local boxStroke = Instance.new("UIStroke")
+	boxStroke.Color = Color3.fromRGB(80, 120, 255)
+	boxStroke.Thickness = 1
+	boxStroke.Parent = box
+
+	box.FocusLost:Connect(function()
+		local val = tonumber(box.Text)
+		if val and callback then
+			callback(val)
+		else
+			box.Text = tostring(defaultVal)
+		end
+	end)
+
+	return row
+end
+
+-- =====================
+--   TIMER ESP DISPLAY
+-- =====================
+
+local timerESPLabel = Instance.new("BillboardGui")
+timerESPLabel.Name = "TimerESP"
+timerESPLabel.Size = UDim2.new(0, 120, 0, 40)
+timerESPLabel.StudsOffset = Vector3.new(0, 3, 0)
+timerESPLabel.AlwaysOnTop = true
+timerESPLabel.Enabled = false
+timerESPLabel.Parent = playerGui
+
+local espTextLabel = Instance.new("TextLabel")
+espTextLabel.Size = UDim2.new(1, 0, 1, 0)
+espTextLabel.BackgroundTransparency = 1
+espTextLabel.Text = "⏱ Timer: --"
+espTextLabel.TextColor3 = Color3.fromRGB(80, 255, 120)
+espTextLabel.TextScaled = true
+espTextLabel.Font = Enum.Font.GothamBold
+espTextLabel.Parent = timerESPLabel
+
+-- =====================
+--   BUILD TOGGLE ROWS
+-- =====================
+
+makeSection("  ⏱  TIMER")
+
+-- Timer ESP toggle
+makeToggle("Timer ESP", 1, function(on)
+	timerESP = on
+	timerESPLabel.Enabled = on
+	if on then
+		-- Try to find timer part in workspace
+		local timerPart = workspace:FindFirstChild("BaseTimer") or workspace:FindFirstChild("Timer")
+		if timerPart then
+			timerESPLabel.Adornee = timerPart
+		end
+	end
+end)
+
+makeSection("  ⚡  MOVEMENT")
+
+-- Custom speed toggle
+makeToggle("Custom Speed", 2, function(on)
+	speedEnabled = on
+	if humanoid then
+		humanoid.WalkSpeed = on and CUSTOM_SPEED or DEFAULT_SPEED
+	end
+end)
+
+-- Speed value input
+makeValueRow("Speed Value", CUSTOM_SPEED, 3, function(val)
+	CUSTOM_SPEED = val
+	if speedEnabled and humanoid then
+		humanoid.WalkSpeed = val
+	end
+end)
+
+-- Inf jump toggle
+makeToggle("Inf Jump", 4, function(on)
+	infJump = on
+end)
+
+makeSection("  🤖  AUTO")
+
+-- Auto grab toggle
+makeToggle("Auto Grab", 5, function(on)
+	autoGrab = on
+end)
+
+-- Auto grab range input
+makeValueRow("Grab Range", AUTO_GRAB_RANGE, 6, function(val)
+	AUTO_GRAB_RANGE = val
+end)
 
 -- =====================
 --   MINI PILL BUTTON
@@ -195,10 +458,8 @@ headerBar.InputBegan:Connect(function(input)
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-	if dragging and (
-		input.UserInputType == Enum.UserInputType.MouseMovement
-		or input.UserInputType == Enum.UserInputType.Touch
-	) then
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch) then
 		local delta = input.Position - dragStart
 		mainFrame.Position = UDim2.new(
 			startPos.X.Scale, startPos.X.Offset + delta.X,
@@ -234,10 +495,8 @@ miniBtn.InputBegan:Connect(function(input)
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-	if miniDragging and (
-		input.UserInputType == Enum.UserInputType.MouseMovement
-		or input.UserInputType == Enum.UserInputType.Touch
-	) then
+	if miniDragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch) then
 		local delta = input.Position - miniDragStart
 		if math.abs(delta.X) > 4 or math.abs(delta.Y) > 4 then
 			miniDragMoved = true
@@ -262,59 +521,90 @@ end)
 
 local isAnimating = false
 
+local allFrameElements = {mainFrame, headerBar, hubTitle, contentLabel, divider}
+
 local function closeGui()
 	if isAnimating then return end
 	isAnimating = true
-
-	-- Fade out main frame
 	TweenService:Create(mainFrame, quickFade, {BackgroundTransparency = 1}):Play()
 	TweenService:Create(mainStroke, quickFade, {Transparency = 1}):Play()
 	TweenService:Create(headerBar, quickFade, {BackgroundTransparency = 1}):Play()
 	TweenService:Create(hubTitle, quickFade, {TextTransparency = 1}):Play()
-	TweenService:Create(contentLabel, quickFade, {TextTransparency = 1}):Play()
 	TweenService:Create(divider, quickFade, {BackgroundTransparency = 1}):Play()
-
 	task.wait(0.35)
 	mainFrame.Visible = false
-
-	-- Reset transparencies for when it reopens
 	mainFrame.BackgroundTransparency = 0
 	mainStroke.Transparency = 0
 	headerBar.BackgroundTransparency = 0
 	hubTitle.TextTransparency = 0
-	contentLabel.TextTransparency = 0
 	divider.BackgroundTransparency = 0
-
 	miniBtn.Visible = true
 	isAnimating = false
 end
 
 local function openGui()
 	if isAnimating then return end
-	if miniDragMoved then return end -- dont open if user was dragging
+	if miniDragMoved then return end
 	isAnimating = true
-
 	miniBtn.Visible = false
 	mainFrame.Visible = true
-
-	-- Start transparent then fade in
 	mainFrame.BackgroundTransparency = 1
 	mainStroke.Transparency = 1
 	headerBar.BackgroundTransparency = 1
 	hubTitle.TextTransparency = 1
-	contentLabel.TextTransparency = 1
 	divider.BackgroundTransparency = 1
-
 	TweenService:Create(mainFrame, quickFade, {BackgroundTransparency = 0}):Play()
 	TweenService:Create(mainStroke, quickFade, {Transparency = 0}):Play()
 	TweenService:Create(headerBar, quickFade, {BackgroundTransparency = 0}):Play()
 	TweenService:Create(hubTitle, quickFade, {TextTransparency = 0}):Play()
-	TweenService:Create(contentLabel, quickFade, {TextTransparency = 0}):Play()
 	TweenService:Create(divider, quickFade, {BackgroundTransparency = 0}):Play()
-
 	task.wait(0.35)
 	isAnimating = false
 end
 
 closeBtn.MouseButton1Click:Connect(closeGui)
 miniBtn.MouseButton1Click:Connect(openGui)
+
+-- =====================
+--   GAME LOOP
+-- =====================
+
+-- Inf jump
+UserInputService.JumpRequest:Connect(function()
+	if infJump and humanoid then
+		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end)
+
+-- Timer ESP update + Auto Grab loop
+RunService.Heartbeat:Connect(function()
+
+	-- Timer ESP: find BaseTimer or Timer value and display it
+	if timerESP then
+		local timerObj = workspace:FindFirstChild("BaseTimer") or workspace:FindFirstChild("Timer")
+		if timerObj then
+			timerESPLabel.Adornee = timerObj
+			local val = timerObj:FindFirstChildWhichIsA("NumberValue") or timerObj:FindFirstChildWhichIsA("IntValue") or timerObj:FindFirstChildWhichIsA("StringValue")
+			if val then
+				espTextLabel.Text = "⏱ " .. tostring(math.floor(tonumber(val.Value) or 0)) .. "s"
+			elseif timerObj:IsA("NumberValue") or timerObj:IsA("IntValue") then
+				espTextLabel.Text = "⏱ " .. tostring(math.floor(timerObj.Value)) .. "s"
+			end
+		end
+	end
+
+	-- Auto grab: find nearby ProximityPrompt and trigger it
+	if autoGrab and rootPart then
+		for _, obj in ipairs(workspace:GetDescendants()) do
+			if obj:IsA("ProximityPrompt") then
+				local part = obj.Parent
+				if part and part:IsA("BasePart") then
+					local dist = (rootPart.Position - part.Position).Magnitude
+					if dist <= AUTO_GRAB_RANGE then
+						fireproximityprompt(obj)
+					end
+				end
+			end
+		end
+	end
+end)
